@@ -1,0 +1,481 @@
+I want to track the function per every line in the symbol table. For now we only start with making the parameters local.
+i think using scope should clear this if i try to use any data outdide the function it checks if there is a variable in main with that name if not it declares an error .So we simply maintain a function name,scope for every statement 
+i am thinking of using a scope check this chat out
+How Real Compilers Enforce Local Variables (and How to Start Small)
+You're asking exactly the right question. Let me demystify what real compilers do, then give you a path that works for your SML.
+
+The Big Picture: What Real Compilers Do
+Real compilers enforce local variables through three coordinated mechanisms:
+
+1. Scope Analysis (Compile Time)
+The compiler builds a tree of scopes as it parses:
+
+Global Scope
+├── fn main
+│   ├── local x        ← "x" refers to this x
+│   └── if block
+│       └── local y
+└── fn add
+    └── local a, b     ← "a" and "b" are local to add
+When you see fn add(), push a new scope. When you see }., pop it. Every variable declaration is added to the current scope. Every variable reference is resolved by walking the scope chain from innermost to outermost.
+
+2. Allocation Decision (Compile Time)
+After scope analysis, the compiler knows for each variable:
+
+Global variable → lives in static memory (a fixed address, alive for the whole program)
+Local variable → lives on the stack (address is frame_pointer + offset, alive only during the call)
+Parameter → passed by caller, also at frame_pointer + offset
+3. Stack Frame (Runtime)
+When a function is called, a frame is pushed onto the call stack:
+
+┌─────────────────────┐
+│ Return address      │  ← saved by CALL instruction
+├─────────────────────┤
+│ Saved frame pointer │  ← for restoring caller's frame
+├─────────────────────┤
+│ Parameter 1         │  ← at +offset from FP
+│ Parameter 2         │
+├─────────────────────┤  ← Frame Pointer points here
+│ Local variable 1    │  ← at -offset from FP
+│ Local variable 2    │
+└─────────────────────┘
+Locals are at fixed offsets from the frame pointer, known at compile time. No allocation happens at runtime — just pointer manipulation.
+
+Your Specific Confusion: "What is 'the variable used inside fn'?"
+You're conflating scope analysis with allocation. Let me untangle this.
+
+A compiler doesn't "decide at runtime" whether something is local. It decides at compile time during semantic analysis, by tracking which scope each variable belongs to.
+
+Here's the thing you got right intuitively: if a variable is never referenced outside a function, it can be allocated locally (on the stack). If it IS referenced outside, it must be global (so both the function and the outside code see the same memory).
+
+But the compiler doesn't "check at runtime." It walks the AST twice:
+
+Pass 1: Build the symbol table with scopes. For every reference, mark whether it's used only inside the function or also outside.
+Pass 2: Generate code using the symbol table's decisions.
+A Simple Path Forward for Your Compiler
+Since you want to "start small" with int/float/double and your SML is very simple, here are three options in increasing complexity. Pick one and stick with it.
+
+Option A: Everything is Global (Simplest — Start Here)
+Just treat all variables as global. Function parameters are passed by storing their values into known global locations before the call.
+
+Compiler generates:
+  for "call add(3, 5)":
+    load 3 into known_slot_0    ; parameter passing
+    load 5 into known_slot_1
+    call add
+    read result from known_slot_2
+
+  for "fn add() {":
+    ; reads known_slot_0 and known_slot_1 as its parameters
+    ; writes to known_slot_2 as its return value
+Pros: Trivial. No stack frame for variables.
+Cons: No recursion. Reentrancy is impossible. Name conflicts if two functions use the same temp.
+
+This is how the original Simpletron and early BASICs worked. It's a perfectly valid starting point.
+
+Option B: Per-Function Static Locals (Medium)
+You allocate locals for each function in a dedicated "local area" for that function. Each function has a fixed size computed at compile time.
+
+Memory layout:
+  [0..49]   global variables
+  [50..79]  fn add's locals
+  [80..109] fn sub's locals
+  ...
+  [130..148] stack for return addresses
+Compiler decides: "Variable x is only used inside add, so I'll allocate it in add's local area at offset 3, accessible at absolute address 53."
+
+Pros: No recursion needed. Locals don't pollute the global namespace.
+Cons: Still no recursion. Slightly more complex to track.
+
+This is how Fortran I worked (and FORTRAN didn't have recursion for decades).
+
+Option C: True Stack Frames (Hardest — Do Last)
+Each function call dynamically allocates space on the stack. The frame pointer points to the current frame. Locals are at negative offsets from FP.
+
+Call add(3, 5):
+  push FP onto stack
+  FP = SP
+  store 3 at FP+3   ; parameter
+  store 5 at FP+4   ; parameter
+  branch to add
+
+Inside add:
+  locals at FP-1, FP-2, ...
+
+Return:
+  SP = FP
+  pop FP
+  branch to saved return address
+Pros: Recursion works. Reentrancy works. The "right" way.
+Cons: You need real stack management in your SML.
+
+My Recommendation: Start with Option B, Skip to C When You Need Recursion
+For your SML, I'd actually do Option B as the next step, not Option A. Here's why:
+
+Your SML already has:
+
+Opcodes 15-18 for stack pointer manipulation
+Opcodes 22-23 for indirect addressing
+Return address stack at 130-148
+You're already 60% of the way to a real stack frame. Just upgrade the symbol table to track scope.
+
+Concrete Steps to Add Local Variables
+Step 1: Add scopes to your symbol table
+
+struct TableEntry {
+    string symbol;
+    string type;
+    int location;
+    int scope;          // NEW: 0 = global, 1+ = function scope
+    string scopeName;   // NEW: which function
+    bool isParameter;   // NEW
+    bool isLocal;       // NEW
+};
+Step 2: Track current scope during parsing
+
+class Parser {
+    int currentScope = 0;        // 0 = global
+    string currentFunction = "";  // empty when in global
+    std::stack<int> scopeStack;  // for nested if/while (later)
+    
+    // When you see "fn add() {":
+    //   currentScope++;
+    //   currentFunction = "add";
+    //   push old scope
+    
+    // When you see "}.":
+    //   currentScope = scopeStack.top(); pop();
+    //   currentFunction = "";
+};
+Step 3: When allocating a variable, decide where it lives
+
+// In SymbolTable::assign or similar:
+if (currentScope == 0) {
+    // Global: allocate from nextData going down (your existing approach)
+} else {
+    // Local: allocate in the function's dedicated area
+    // You need a per-function counter: "how much space has add() used so far?"
+}
+Step 4: Pre-pass to figure out which variables are local
+
+You need a pre-pass (or do it during parsing) that asks: "Is this variable ever used outside its defining function?" If no, it's local. If yes, it's global.
+
+Simplest way: Two passes. First pass just records all uses. Second pass generates code.
+
+Answering Your Specific Concern
+"if the variable has not been used while inside fn the symboltable skips"
+
+You had the right idea but inverted. The compiler should:
+
+During parsing, see let x = 5 inside fn foo.
+Look at where x is used. If only inside foo, allocate in foo's local area.
+If used in main too, promote to global.
+You can do this with two passes:
+
+Pass 1 (your existing interpret): Just record every name and every use site.
+Pass 2: Decide global vs local, then allocate.
+Pass 3 (your existing parseLine): Generate code with the decisions.
+Don't try to make this decision in one pass — you'll get tangled up in forward references.
+
+The Real-Life Compiler Answer in One Sentence
+Real compilers enforce local variables by tracking scope during semantic analysis (compile time), then allocating locals at fixed offsets from a frame pointer that gets pushed/popped on a runtime call stack when functions are entered/exited.
+
+For your "start small" goal:
+
+This week: Get fn/call working with everything as global (Option A). Your current code is close.
+Next week: Add scope tracking to the symbol table and use Option B (per-function static locals).
+When you need recursion: Upgrade to Option C (true stack frames) — your opcodes 15-18 are already there waiting.
+The key insight: you don't need runtime allocation for the simple case. Everything can be decided at compile time. Runtime allocation only matters for recursion.
+
+
+next issue.txt
+this
+edit
+Thought for 3.6 seconds
+
+
+
+
+Tackling Local Variables: A Practical Path
+You're asking the right questions at the right time. Let me address each one directly and then give you a concrete plan.
+
+Your Four Concerns, Unpacked
+Concern 1: "We don't want the symbol table to allocate variables inside fn"
+Correct instinct. Globals and locals should live in different regions. The fix is to give your symbol table a scope, and have it allocate from different memory regions based on scope.
+
+Concern 2: "Type check parameters at call site"
+This is straightforward once you have a function table. At call add(3, 5), the compiler:
+
+Looks up add in the function table
+Extracts the types of arguments in the call (here: both are int)
+Compares against the parameter types declared in the fn
+Errors if count or types don't match
+Concern 3: "How does symbol table know to put a and b in stack region"
+This is the heart of your question. The answer: the symbol table knows the scope of every variable, and the scope determines the region.
+
+Concern 4: "If locals are overwritten when called, how do we call them?"
+This is the recursion question. For Option B (per-function static locals), you can't recurse — and that's fine to start. For Option C (true stack frames), the frame pointer protects each call's locals.
+
+The Mental Model: Three Memory Regions
+Stop thinking of memory as one flat space. Think of it as three regions that grow toward each other:
+
+Memory Layout (SML):
+┌─────────────────────────────────────┐  Address 0
+│   CODE (instructions)               │  Grows UP (nextInstruction)
+├─────────────────────────────────────┤  ~50
+│   GLOBAL VARIABLES                  │  Grows DOWN from 129
+│   (allocated at compile time)       │
+├─────────────────────────────────────┤  110
+│   LOCAL VARIABLES                   │  Grows DOWN from a per-fn base
+│   (one region per function)         │
+├─────────────────────────────────────┤  130
+│   STACK (return addresses, frames)  │  Grows UP (stack pointer)
+└─────────────────────────────────────┘  Address 149
+When you see fn add():
+
+The compiler picks a fresh region for add's locals (e.g., starts at 109, grows down)
+All variables declared inside add are allocated in this region
+Parameters get their own slots at the top of this region
+Concrete Implementation Plan
+Step 1: Extend the Symbol Table with Scope
+struct TableEntry {
+    string symbol;
+    string type;
+    int location;
+    int size = 0;
+    bool hasBeenInitialized = false;
+    int scope = 0;          // NEW: 0 = global, 1+ = function id
+    string scopeName = "";  // NEW: "add", "main", or "" for global
+    bool isParameter = false; // NEW
+};
+
+class SymbolTable {
+    // ...
+    int currentScope = 0;
+    string currentFunction = "";
+    
+    // For Option B: per-function local region bases
+    // nextLocalAddr[fnName] = highest available address in fn's region
+    std::unordered_map<string, int> localRegionTop; 
+    std::unordered_map<string, int> localRegionBottom; 
+};
+Step 2: Add a Function's Parameter List
+Extend your FunctionEntry:
+
+struct FunctionEntry {
+    string name;
+    vector<string> parameterNames;   // NEW
+    vector<string> parameterTypes;   // NEW: "int", "float", "double", "string"
+    string returnType = "void";
+    bool isDeclared = false;
+    bool isDefined = false;
+    int firstInstruction = -1;
+    int lastInstruction = -1;
+    int localRegionBase = -1;   // NEW: where this fn's locals start
+    int localRegionTop = -1;    // NEW: where to allocate next local
+};
+Step 3: When You See fn add(a, b) {
+The parser needs to:
+
+Extract parameter names and types
+Register add in the function table with these params
+Set the current scope to add
+For each parameter a, b: allocate them in add's local region (at the top, so caller writes to known offsets)
+// Inside the "fn" command handler:
+if (command == "fn") {
+    iss >> arg1 >> sign;  // arg1 = "add(a:int, b:int)"
+    
+    // Parse parameter list
+    auto params = parseParamList(arg1);  // returns {{"a","int"},{"b","int"}}
+    string fnName = extractFnName(arg1);
+    
+    if (sign.empty()) {
+        // Forward declaration: just record params
+        st.declareFunction(fnName, params);
+        return;
+    }
+    
+    // Function definition
+    // Allocate a region for this fn's locals
+    int regionTop = allocateLocalRegion(fnName, params.size());
+    st.defineFunction(fnName, regionTop, params);
+    
+    // Push the current scope, set new scope
+    st.pushScope(fnName);
+    
+    // Register parameters as locals at the TOP of the region
+    // (caller will write arguments to these known addresses)
+    for (int i = 0; i < params.size(); i++) {
+        st.addParameter(params[i].name, params[i].type, regionTop - i);
+    }
+}
+Step 4: Inside the Function Body
+When you see let x = a + b inside add:
+
+// In interpret() when processing a let:
+void interpret(string& line, ...) {
+    // ... existing code ...
+    
+    if (token == "let") {
+        string varName, sign;
+        iss >> varName >> sign;
+        
+        if (currentScope == 0) {
+            // Global: allocate from global region (existing behavior)
+            assign(varName, "var", nextData, hasError);
+        } else {
+            // Local: allocate from current function's local region
+            int loc = --localRegionTop[currentFunction];
+            assignLocal(varName, loc, currentFunction);
+        }
+    }
+}
+Step 5: At call add(3, 5) — Pass Arguments
+The caller needs to write each argument into the parameter slots before the call:
+
+// In "call" command handler:
+else if (command == "call") {
+    iss >> arg1;  // "add(3, 5)"
+    auto args = parseCallArgs(arg1);  // {"3", "5"}
+    string fnName = extractFnName(arg1);
+    
+    // Type check
+    auto& fn = st.getFunction(fnName);
+    if (args.size() != fn.parameterNames.size()) {
+        error("Argument count mismatch");
+        return;
+    }
+    for (int i = 0; i < args.size(); i++) {
+        if (inferType(args[i]) != fn.parameterTypes[i]) {
+            error("Argument type mismatch");
+            return;
+        }
+    }
+    
+    // Generate code to:
+    // 1. Evaluate each argument
+    // 2. Store into the parameter slot
+    int paramBase = fn.localRegionTop;  // highest addr in fn's region
+    for (int i = 0; i < args.size(); i++) {
+        int argLoc = parseAddress(args[i], st);
+        int paramLoc = paramBase - i;  // known at compile time
+        instructionMemory[nextInstruction++] = 20000 + argLoc;  // LOAD
+        instructionMemory[nextInstruction++] = 21000 + paramLoc; // STORE to param
+    }
+    
+    // 3. Push return address, then branch
+    // ... (your existing call mechanism)
+}
+Step 6: At }. — Pop the Scope
+else if (command == "}.") {
+    // ... existing return code ...
+    
+    // Pop scope
+    st.popScope();
+}
+Answering Concern 1 Specifically: Strings and Stack Overflow
+"if the statements and data inside fn are much we will run out of stack"
+
+Two separate problems here:
+
+Local variable region overflow: If add has 50 locals, its region needs 50 slots. Just give each function a fixed-size region computed at compile time. Limit locals per function (say 20) and you have a bounded requirement.
+
+String allocation for print: The string "haheehehe" is allocated in the global data region, not the local region. Inside a function, when you say print "hello", the compiler allocates that string literal in the global region because strings need persistent memory. This is exactly what your allocateStringLiteral already does.
+
+The rule is simple: string literals and constants always go in the global region, even when used inside a function. Only variables (let x = ...) become locals.
+
+Answering Concern 4: "Locals are overwritten when called"
+This is the recursion problem, and it's the reason Option B is "no recursion." If add calls itself:
+
+fn add(n) {
+    if n == 0 return 0
+    return add(n-1) + n
+}
+With Option B, the second call to add overwrites n's slot. Stack corruption.
+
+To get recursion, you need Option C (true stack frames). Here's the upgrade:
+
+Each call to add:
+  ┌──────────────────┐ ← old stack pointer
+  │  (caller's frame)│
+  ├──────────────────┤ ← new stack pointer (frame pointer for add)
+  │ saved frame ptr  │
+  │ parameter n      │  at +1 from FP
+  │ local x          │  at -1 from FP
+  │ local y          │  at -2 from FP
+  └──────────────────┘
+The rule: Before add writes to its locals, it bumps the stack pointer past its locals. When add returns, it restores the pointer. Each call gets a fresh, non-overlapping region.
+
+How to implement on your SML:
+
+// At call site:
+PUSH_RETURN_ADDRESS    // existing opcodes 15-18
+LOAD arg1 → accumulator
+STORE to FP+1          // parameter slot
+LOAD arg2 → accumulator
+STORE to FP+2
+BRANCH to add
+
+// At fn entry:
+FP = SP                // mark current stack top as this frame
+SP -= numLocals        // reserve space for locals
+
+// At fn exit (}.) :
+SP = FP                // pop the locals
+FP = saved_FP          // restore caller's frame
+BRANCH to [SP]         // return
+You'd need two new opcodes:
+
+25 — copy FP to accumulator
+26 — set FP from accumulator
+But for now, stick with Option B and just say "no recursion." It's a documented limitation. Many real languages started this way (early C, Fortran).
+
+My Recommendation: Build Order
+Today (Option A → B in one go):
+
+Add scope and scopeName to TableEntry
+Add a localRegionTop to each function
+Make interpret() allocate locals in the function's region
+Make parseLine() write parameters before each call
+Update }.' to pop the scope
+Document: "no recursion"
+Later (if you want recursion):
+
+Add a real frame pointer to SML
+Add 25 and 26 opcodes
+Convert locals to be at offsets from FP, not absolute addresses
+Re-test
+The "no recursion" limitation is fine for a starter language. Plenty of real languages didn't have recursion for years. It teaches you scope, allocation, and parameter passing — all the important concepts — without the runtime complexity of frame management.
+
+One More Critical Detail: The Lookup Must Be Scope-Aware
+Your current lookup() is broken for locals because it returns the first match. With locals, you need:
+
+int lookup(string argument) {
+    string name = baseSymbol(argument);
+    
+    // First: search current scope (locals of current fn)
+    for (int i = 0; i < move; i++) {
+        if (symbolTable[i].symbol == name && 
+            symbolTable[i].scopeName == currentFunctionName) {
+            return symbolTable[i].location;
+        }
+    }
+    
+    // Then: search global scope
+    for (int i = 0; i < move; i++) {
+        if (symbolTable[i].symbol == name && 
+            symbolTable[i].scopeName == "") {
+            return symbolTable[i].location;
+        }
+    }
+    
+    return -1;
+}
+Current scope first, then global. This is the same rule every compiler uses. It's why you can have a local x that shadows a global x.
+
+TL;DR
+Yes, locals are in a different region — your symbol table knows this through scopeName.
+Yes, parameters live in the function's region — caller writes to known slots before branching.
+No, you don't need runtime allocation — compile time is enough if you give up recursion.
+Yes, you can defer recursion — add it later when you need it. The upgrade path is clear (real frame pointer).
+Want me to write out the full modified SymbolTable.h and the new fn/call handlers with this design?

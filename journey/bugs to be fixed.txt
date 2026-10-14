@@ -1,0 +1,24 @@
+bugs to be fixed 
+7) add more context to call to explain it
+13) using map to reduce function calls in function parameter anything
+14) allowing expression like and checking them
+15) validate against "[ ][" too
+17) does array addition works
+21) you might need to check getSize again
+26) explain that parameter indexing check is not given it will give undefined
+27) allowing array index expression like
+29) to make sure the local variable aren't the same as function parameters
+33) allowing string index for now
+34) a lot to be fixed with string e.g i also want to allow string index passed as argument. you cant assign words to a parameter string
+34.5) always check against string argument in expression like statements
+35) add ret check for only function declaration
+36) allowing return strings
+37) allowing function calls used as arguments,in let manipulation or any keyword
+38) make sure array with index always default to var
+39) fix the ret it always defult everything to expression like check for tpe then add the return type
+40) allow ret to return function calls e.g ret call get(a)
+41) fixing the allocatseStringLiteral
+42)having to check for the address of a variable is sick
+43) fix string because of ypu change it it prints the max
+44) allow it to return different string literal size
+45) allow dynamic creation of string from function

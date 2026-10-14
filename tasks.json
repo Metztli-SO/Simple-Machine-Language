@@ -1,0 +1,20 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Compile SML",
+            "type": "shell",
+            "command": "python",
+            "args": [
+                "-c",
+                "lines = [l for l in open('${file}').readlines() if l.strip()]; num = 10; [print(f'{n} {l}', end='') for n, l in zip(range(10, 10*len(lines)+1, 10), lines)]",
+                ">",
+                "program.txt"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            }
+        }
+    ]
+}
