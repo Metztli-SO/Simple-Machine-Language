@@ -11,7 +11,7 @@
 #include<ios>
 #include <fstream>
 
-#include "MemoryLayout.h"
+#include "../memory/MemoryLayout.h"
 
 using std::string;
 using std::pow;

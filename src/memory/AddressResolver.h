@@ -2,9 +2,9 @@
 #ifndef ADDRESS_RESOLVER_H
 #define ADDRESS_RESOLVER_H
 
-#include "SymbolTable.h"
+#include "../compiler/SymbolTable.h"
 #include <string>
-#include "TokenUtils.h"
+#include "../utils/TokenUtils.h"
 
 struct resolvedAddress {
     int location = -1;

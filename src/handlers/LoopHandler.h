@@ -2,10 +2,10 @@
 #ifndef LOOP_HANDLER_H
 #define LOOP_HANDLER_H
 
-#include "../CodegenContext.h"
-#include "../AddressResolver.h"
-#include "../Opcode.h"
-#include "../TokenUtils.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/AddressResolver.h"
+#include "../sml/Opcode.h"
+#include "../utils/TokenUtils.h"
 
 #include <string>
 #include <sstream>

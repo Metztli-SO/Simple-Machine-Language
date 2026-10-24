@@ -127,17 +127,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="AddressResolver.cpp" />
-    <ClCompile Include="MemoryLayout.cpp" />
-    <ClCompile Include="Simple Machine Language.cpp" />
-    <ClCompile Include="TempPool.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="AddressResolver.h" />
-    <ClInclude Include="CodegenContext.h" />
-    <ClInclude Include="Compiler.h" />
-    <ClInclude Include="Diagnostics.h" />
-    <ClInclude Include="FnNameValidator.h" />
     <ClInclude Include="handlers\ControlFlowHandler.h" />
     <ClInclude Include="handlers\DeclarationHandler.h" />
     <ClInclude Include="handlers\FunctionHandler.h" />
@@ -146,18 +135,35 @@
     <ClInclude Include="handlers\IOHandlers.h" />
     <ClInclude Include="handlers\LetHandler.h" />
     <ClInclude Include="handlers\LoopHandler.h" />
-    <ClInclude Include="Header.h" />
-    <ClInclude Include="Header1.h" />
-    <ClInclude Include="Header2.h" />
-    <ClInclude Include="MemoryLayout.h" />
-    <ClInclude Include="Opcode.h" />
-    <ClInclude Include="Parser.h" />
-    <ClInclude Include="postfix.h" />
-    <ClInclude Include="SML.h" />
-    <ClInclude Include="Stacks.h" />
-    <ClInclude Include="StringLiteralAllocator.h" />
-    <ClInclude Include="SymbolTable.h" />
-    <ClInclude Include="TempPool.h" />
+    <ClInclude Include="src\compiler\CodegenContext.h" />
+    <ClInclude Include="src\compiler\Compiler.h" />
+    <ClInclude Include="src\compiler\Parser\Parser.h" />
+    <ClInclude Include="src\compiler\SymbolTable.h" />
+    <ClInclude Include="src\expression\postfix.h" />
+    <ClInclude Include="src\expression\Stacks.h" />
+    <ClInclude Include="src\handlers\ControlFlowHandler.h" />
+    <ClInclude Include="src\handlers\DeclarationHandler.h" />
+    <ClInclude Include="src\handlers\FunctionHandler.h" />
+    <ClInclude Include="src\handlers\GosubHandler.h" />
+    <ClInclude Include="src\handlers\IncrementDecrementHandler.h" />
+    <ClInclude Include="src\handlers\IOHandlers.h" />
+    <ClInclude Include="src\handlers\LetHandler.h" />
+    <ClInclude Include="src\handlers\LoopHandler.h" />
+    <ClInclude Include="src\memory\AddressResolver.h" />
+    <ClInclude Include="src\memory\MemoryLayout.h" />
+    <ClInclude Include="src\memory\StringLiteralAllocator.h" />
+    <ClInclude Include="src\memory\TempPool.h" />
+    <ClInclude Include="src\sml\Opcode.h" />
+    <ClInclude Include="src\sml\SML.h" />
+    <ClInclude Include="src\utils\Diagnostics.h" />
+    <ClInclude Include="src\utils\FnNameValidator.h" />
+    <ClInclude Include="src\utils\TokenUtils.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="src\memory\AddressResolver.cpp" />
+    <ClCompile Include="src\memory\MemoryLayout.cpp" />
+    <ClCompile Include="src\memory\TempPool.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

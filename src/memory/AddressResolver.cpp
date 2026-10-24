@@ -4,10 +4,10 @@
 #include <string>
 
 #include "AddressResolver.h"
-#include "SymbolTable.h"
+#include "../compiler/SymbolTable.h"
 #include "TempPool.h"
-#include "Opcode.h"
-#include "TokenUtils.h"
+#include "../sml/Opcode.h"
+#include "../utils/TokenUtils.h"
 
 using std::cerr;
 using std::endl;

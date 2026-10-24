@@ -8,7 +8,7 @@ using std::cerr;
 using std::endl;
 
 //I want to stop generating instructions once the instruction/data space is finished
-//Parser::parseline has a check for every line if tis check is absent it will keep printing the error message until the end of the instructions
+//Parser::parseline has a check for every line, if this check is absent it will keep printing the error message until the end of the instructions
 extern bool stopInstruction;
 
 //This contains the Memory Layout for the Compiler

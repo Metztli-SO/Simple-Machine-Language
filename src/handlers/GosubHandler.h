@@ -2,9 +2,9 @@
 #ifndef GOSUB_HANDLER_H
 #define GOSUB_HANDLER_H
 
-#include "../CodegenContext.h"
-#include "../MemoryLayout.h"
-#include "../Opcode.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/MemoryLayout.h"
+#include "../sml/Opcode.h"
 
 #include <string>
 #include <sstream>

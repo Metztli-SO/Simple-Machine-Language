@@ -1,5 +1,5 @@
-#include "SML.h"
-#include "Compiler.h"
+#include "sml/SML.h"
+#include "compiler/Compiler.h"
 
 #include <fstream>
 #include <iostream>

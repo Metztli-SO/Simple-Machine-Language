@@ -2,15 +2,15 @@
 #ifndef IOHANDLERS_H
 #define IOHANDLERS_H
 
-#include "../CodegenContext.h"
-#include "../AddressResolver.h"
-#include "../postfix.h"
-#include "../TempPool.h"
-#include "../Opcode.h"
-#include "../MemoryLayout.h"
-#include "../TokenUtils.h"
-#include "../Parser.h"
-#include "../StringLiteralAllocator.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/AddressResolver.h"
+#include "../expression/postfix.h"
+#include "../memory/TempPool.h"
+#include "../sml/Opcode.h"
+#include "../memory/MemoryLayout.h"
+#include "../utils/TokenUtils.h"
+#include "../compiler/parser/Parser.h"
+#include "../memory/StringLiteralAllocator.h"
 
 #include <sstream>
 #include <string>

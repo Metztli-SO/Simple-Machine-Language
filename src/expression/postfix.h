@@ -1,9 +1,9 @@
 #ifndef POSTFIX_H
 #define POSTFIX_H
 
-#include "AddressResolver.h"
-#include "TempPool.h"
-#include "Opcode.h"
+#include "../memory/AddressResolver.h"
+#include "../memory/TempPool.h"
+#include "../sml/Opcode.h"
 
 using namespace std;
 

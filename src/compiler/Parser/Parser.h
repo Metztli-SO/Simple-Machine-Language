@@ -8,21 +8,21 @@
 #include <algorithm>
 #include <stack>
 
-#include "TokenUtils.h"
-#include "CodegenContext.h"
-#include "Stacks.h"
-#include "postfix.h"
-#include "AddressResolver.h"
-#include "TempPool.h"
-#include "Opcode.h"
-#include "handlers/IOHandlers.h"
-#include "handlers/IncrementDecrementHandler.h"
-#include "handlers/DeclarationHandler.h"
-#include "handlers/LetHandler.h"
-#include "handlers/ControlFlowHandler.h"
-#include "handlers/LoopHandler.h"
-#include "handlers/FunctionHandler.h"
-#include "handlers/GosubHandler.h"
+#include "../../utils/TokenUtils.h"
+#include "../CodegenContext.h"
+#include "../../expression/Stacks.h"
+#include "../../expression/postfix.h"
+#include "../../memory/AddressResolver.h"
+#include "../../memory/TempPool.h"
+#include "../../sml/Opcode.h"
+#include "../../handlers/IOHandlers.h"
+#include "../../handlers/IncrementDecrementHandler.h"
+#include "../../handlers/DeclarationHandler.h"
+#include "../../handlers/LetHandler.h"
+#include "../../handlers/ControlFlowHandler.h"
+#include "../../handlers/LoopHandler.h"
+#include "../../handlers/FunctionHandler.h"
+#include "../../handlers/GosubHandler.h"
 
 using std::string;
 using std::remove;

@@ -2,16 +2,16 @@
 #ifndef FUNCTION_HANDLER_H
 #define FUNCTION_HANDLER_H
 
-#include "../CodegenContext.h"
-#include "../AddressResolver.h"
-#include "../postfix.h"
-#include "../Stacks.h"
-#include "../TempPool.h"
-#include "../Opcode.h"
-#include "../TokenUtils.h"
-#include "../MemoryLayout.h"
-#include "../StringLiteralAllocator.h"
-#include "../FnNameValidator.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/AddressResolver.h"
+#include "../expression/postfix.h"
+#include "../expression/Stacks.h"
+#include "../memory/TempPool.h"
+#include "../sml/Opcode.h"
+#include "../utils/TokenUtils.h"
+#include "../memory/MemoryLayout.h"
+#include "../memory/StringLiteralAllocator.h"
+#include "../utils/FnNameValidator.h"
 
 #include <string>
 #include <sstream>

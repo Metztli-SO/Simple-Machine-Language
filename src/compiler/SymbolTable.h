@@ -11,8 +11,8 @@
 #include <vector>
 #include <map>
 #include <unordered_map>
-#include "MemoryLayout.h"
-#include "TokenUtils.h"
+#include "../memory/MemoryLayout.h"
+#include "../utils/TokenUtils.h"
 
 using std::vector;
 using std::string;

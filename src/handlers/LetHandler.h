@@ -2,16 +2,16 @@
 #ifndef LET_HANDLER_H
 #define LET_HANDLER_H
 
-#include "../CodegenContext.h"
-#include "../AddressResolver.h"
-#include "../postfix.h"
-#include "../Stacks.h"
-#include "../TempPool.h"
-#include "../Opcode.h"
-#include "../MemoryLayout.h"
-#include "../TokenUtils.h"
-#include "../StringLiteralAllocator.h"
-#include "../FnNameValidator.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/AddressResolver.h"
+#include "../expression/postfix.h"
+#include "../expression/Stacks.h"
+#include "../memory/TempPool.h"
+#include "../sml/Opcode.h"
+#include "../memory/MemoryLayout.h"
+#include "../utils/TokenUtils.h"
+#include "../memory/StringLiteralAllocator.h"
+#include "../utils/FnNameValidator.h"
 #include "FunctionHandler.h"
 
 #include <string>

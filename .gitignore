@@ -9,4 +9,7 @@ Simple M.*/
 *.ipch
 *.tlog
 *.exe
+*.user
 *.vcxproj.user
+Release/
+build/

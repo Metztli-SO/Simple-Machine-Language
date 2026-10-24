@@ -2,9 +2,9 @@
 #ifndef INCREMENT_DECREMENT_HANDLER_H
 #define INCREMENT_DECREMENT_HANDLER_H
 
-#include "../CodegenContext.h"
-#include "../AddressResolver.h"
-#include "../Opcode.h"
+#include "../compiler/CodegenContext.h"
+#include "../memory/AddressResolver.h"
+#include "../sml/Opcode.h"
 
 #include <string>
 

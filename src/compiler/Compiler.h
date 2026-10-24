@@ -5,9 +5,9 @@
 #define MEM_SIZE Mem::TOTAL_SIZE
 
 #include "CodegenContext.h"
-#include "MemoryLayout.h"
+#include "../memory/MemoryLayout.h"
 #include "SymbolTable.h"
-#include "Parser.h"
+#include "parser/Parser.h"
 
 #include <string>
 #include<fstream>
