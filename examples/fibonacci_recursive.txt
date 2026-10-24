@@ -1,0 +1,14 @@
+1 fn fib(n) {
+2   if n == 0 {
+3     ret 0
+4   }
+5   if n == 1 {
+6     ret 1
+7   }
+8   let a = call fib(n-1)
+9   let b = call fib(n-2)
+10  ret a + b
+11 }.
+12 let result = call fib(7)
+13 print result
+14 end
